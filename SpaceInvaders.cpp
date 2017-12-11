@@ -1,9 +1,8 @@
 #include "SpaceInvaders.h"
-#include "neuralnetwork.h"
 
-#include <GL/glut.h>
 #include <cstdlib>
 #include <cmath>
+#include <cfloat>
 #include <queue>
 #include <unistd.h>
 #include <sys/time.h>
@@ -404,10 +403,82 @@ void alien_fire(unsigned long long value)
 
 
 
+Network * build_network()
+{
+	nn_size_t aux_layers_sizes[] = NEURAL_NETWORK_LAYERS_SIZES;
+	nn_float_t (*aux_layers_actvs[])(nn_float_t) = NEURAL_NETWORK_LAYERS_ACTVS;
+	return new_network(NEURAL_NETWORK_N_LAYERS, aux_layers_sizes, aux_layers_actvs, NEURAL_NETWORK_INPUT_SIZE);
+}
+
+void network_keypress(unsigned long long value)
+{
+	switch (value) {
+		case 'l':
+			special_down_call(GLUT_KEY_LEFT, 0, 0);
+			break;
+		case -'l':
+			special_up_call(GLUT_KEY_LEFT, 0, 0);
+			break;
+		case 'r':
+			special_down_call(GLUT_KEY_RIGHT, 0, 0);
+			break;
+		case -'r':
+			special_up_call(GLUT_KEY_RIGHT, 0, 0);
+			break;
+		case ' ':
+			keyboard_down_call(' ', 0, 0);
+			break;
+		case -' ':
+			keyboard_down_call(' ', 0, 0);
+			break;
+		default:
+			break;
+	}
+}
+
+void get_input()
+{
+	//AlienShip fleet[ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS];
+	//int fleet_direction;
+	//GLfloat missile_x, missile_y;
+	//bool missile_firing;
+	//bool game_over;
+	//GLfloat alien_missile_x, alien_missile_y;
+	//char alien_missile_state;
+	//int ship_lives, alien_lives;
+	network_input[0] = ship_x;
+}
+
 void network_action(unsigned long long value)
 {
+	if (value != current_game || game_over) return;
+	
+	get_input();
+	nn_size_t output_size = cur_network->layers[cur_network->n_layers-1]->n_neurons;
 	nn_float_t * output = network_forward(cur_network, network_input);
+
+	unsigned long long key = -1, max_id = -1;
+	nn_float_t max = FLT_MIN;
+	for (int i=0; i<output_size-1; i++){
+		if (output[i] >= max){
+			max = output[i];
+			max_id = i;
+		}
+	}
+	if (max_id == 0) key = 'l';
+	else if (max_id == 1) key = 'r';
+	else key = 'n';
+	add_event(0, &network_keypress, key);
+	add_event(NEURAL_NETWORK_KEY_UP_DELAY, &network_keypress, -key);
+
+	if (output[output_size-1] >= 0.5f){
+		key = ' ';
+		add_event(0, &network_keypress, key);
+		add_event(NEURAL_NETWORK_KEY_UP_DELAY, &network_keypress, -key);
+	}
+
 	free(output);
+	if (!game_over) add_event(NEURAL_NETWORK_DELAY, &network_action, value);
 }
 
 
@@ -438,6 +509,7 @@ void reset()
 	add_event(0, &move_ship, current_game);
 	add_event(0, &move_missile, current_game);
 	add_event(0, &move_alien_fleet, current_game<<1);
+	add_event(0, &network_action, current_game);
 }
 
 
@@ -490,6 +562,7 @@ int main(int argc, char * argv[])
 	glutSpecialUpFunc(&special_up_call);
 	glutDisplayFunc(&draw_all);
 	glutIdleFunc(&event_handler);
+	cur_network = build_network();
 	reset();
 
 	//Incializar o desenho

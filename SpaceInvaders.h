@@ -3,6 +3,9 @@
 
 
 
+#include "neuralnetwork.h"
+#include <GL/glut.h>
+
 #define SHIP_SCALE 0.20f
 #define SHIP_Y_OFFSET -0.9f
 #define SHIP_STEP 0.02f
@@ -26,8 +29,11 @@
 #define ALIEN_FLEET_DELAY 300000.0
 
 #define NEURAL_NETWORK_DELAY 10000
-#define NEURAL_NETWORK_INPUT_SIZE 10
-#define NEURAL_NETWORK_OUTPUT_SIZE 4
+#define NEURAL_NETWORK_KEY_UP_DELAY 2000
+#define NEURAL_NETWORK_INPUT_SIZE 1
+#define NEURAL_NETWORK_N_LAYERS 3
+#define NEURAL_NETWORK_LAYERS_SIZES {100, 100, 4}
+#define NEURAL_NETWORK_LAYERS_ACTVS {&sigm, &sigm, &sigm}
 
 #define EVENT_HANDLER_DELAY 20
 
@@ -52,6 +58,9 @@ void move_alien_fleet(unsigned long long);
 
 void alien_fire(unsigned long long);
 
+Network * build_network();
+void network_keypress(unsigned long long);
+void get_input();
 void network_action(unsigned long long);
 
 void end_game();
