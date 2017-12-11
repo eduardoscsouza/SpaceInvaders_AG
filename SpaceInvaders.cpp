@@ -432,6 +432,8 @@ alienigena para atirar
 */
 void alien_fire(int value)
 {
+	if (value != current_game) return;
+	
 	int alien = -1;
 	do {
 		alien = rand() % (ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS);
