@@ -2,14 +2,36 @@
 #include <GL/glut.h>
 #include <cstdlib>
 #include <cmath>
+#include <queue>
+#include <unistd.h>
+#include <sys/time.h>
+#include <stdio.h>
 
 #define EUCL_DIST(x1, y1, x2, y2) (sqrt(((x1)-(x2)) * ((x1)-(x2)) + ((y1)-(y2)) * ((y1)-(y2))))
+
+using namespace std;
 
 typedef struct
 {
 	GLfloat x_pos, y_pos;
 	bool alive;
 }AlienShip;
+
+class Event
+{
+public:
+	pair<double, pair<void (*)(int), int> > event;
+
+	Event(double time, void (*func)(int), int arg)
+	{
+		event = pair<double, pair<void (*)(int), int> >(time, pair<void (*)(int), int>(func, arg));
+	}
+
+	bool operator > (const Event& other) const
+	{
+		return this->event > other.event;
+	}
+};
 
 GLfloat ship_x;
 char ship_dir;
@@ -21,7 +43,9 @@ bool game_over;
 GLfloat alien_missile_x, alien_missile_y;
 char alien_missile_state;
 int ship_lives, alien_lives;
+
 int current_game = 0;
+priority_queue<Event, vector<Event>, greater<Event> > events;
 
 
 
@@ -400,6 +424,28 @@ void reset()
 
 
 
+double get_curtime()
+{
+	struct timeval aux_time;
+	gettimeofday(&aux_time, NULL);
+	return (aux_time.tv_sec*1000000.0 + aux_time.tv_usec);
+}
+
+void event_handler()
+{
+	if (!events.empty()){
+		Event top_event = events.top();
+		if (get_curtime() >= top_event.event.first){
+			events.top().event.second.first(events.top().event.second.second);
+			events.pop();
+		}
+	}
+
+	usleep(EVENT_HANDLE_DELAY);
+}
+
+
+
 int main(int argc, char * argv[])
 {
 	//Inicializacao do glut
@@ -419,6 +465,7 @@ int main(int argc, char * argv[])
 	glutKeyboardFunc(&keyboard_down_call);
 	glutSpecialUpFunc(&special_up_call);
 	glutDisplayFunc(&draw_all);
+	glutIdleFunc(&event_handler);
 	reset();
 
 	//Incializar o desenho

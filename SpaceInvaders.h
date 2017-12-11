@@ -27,6 +27,8 @@
 
 #define FPS 30
 
+#define EVENT_HANDLE_DELAY 20
+
 void draw_ship();
 void draw_alien(float, float);
 void draw_fleet();
@@ -47,6 +49,9 @@ void move_alien_fleet(int);
 void alien_fire(int);
 
 void reset();
+
+double get_curtime();
+void event_handler();
 
 double time_multiplier = 1.0;
 
