@@ -37,6 +37,8 @@
 
 #define EVENT_HANDLER_DELAY 20
 
+#define MAX_GAMES 1000
+
 #define FPS 30
 
 void draw_ship();
@@ -64,7 +66,7 @@ void network_keypress(unsigned long long);
 void network_action(unsigned long long);
 
 void end_game();
-void reset();
+void reset(int);
 
 double get_curtime();
 void add_event(double, void (*)(unsigned long long), unsigned long long);

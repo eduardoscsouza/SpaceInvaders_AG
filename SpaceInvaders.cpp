@@ -6,6 +6,7 @@
 #include <queue>
 #include <unistd.h>
 #include <sys/time.h>
+#include <cstdio>
 
 #define EUCL_DIST(x1, y1, x2, y2) (sqrt(((x1)-(x2)) * ((x1)-(x2)) + ((y1)-(y2)) * ((y1)-(y2))))
 
@@ -45,7 +46,8 @@ char alien_missile_state;
 int ship_lives, alien_lives;
 
 unsigned long long current_game = 0;
-double time_multiplier = 0.1;
+double time_multiplier = 0.0001;
+bool clean_events = false;
 priority_queue<Event, vector<Event>, greater<Event> > events;
 
 Network * cur_network = NULL;
@@ -316,7 +318,7 @@ void keyboard_down_call(unsigned char key, int x, int y)
 			missile_y = SHIP_Y_OFFSET + (SHIP_SCALE * 0.5f) + (MISSILE_SCALE * 0.3f);
 		}
 	}
-	else if (key == 'r') reset();
+	else if (key == 'r') reset(0);
 }
 
 
@@ -482,12 +484,28 @@ void network_action(unsigned long long value)
 
 void end_game()
 {
+	if (game_over) return;
 	game_over = true;
+
+	printf("End of game %llu\n", current_game);
+	if (current_game == MAX_GAMES-2){
+		time_multiplier = 0.5;
+		glutTimerFunc(0, &redraw, 0);
+	}
+	else if (current_game > MAX_GAMES-2) exit(0);
+
 	current_game++;
+	clean_events = true;
+	glutTimerFunc(0, &reset, 0);
 }
 
-void reset()
+void reset(int value)
 {
+	if (clean_events){
+		glutTimerFunc(0, &reset, 0);
+		return;
+	}
+
 	ship_x = 0.0f;
 	ship_dir = 0;
 	fleet_direction = ALIEN_FLEET_RIGHT_MOV;
@@ -498,7 +516,6 @@ void reset()
 	alien_lives = ALIEN_FLEET_COLUMNS * ALIEN_FLEET_ROWS;
 	if (cur_network != NULL) delete_network(cur_network);
 	cur_network = build_network();
-	while(!events.empty()) events.pop();
 	for (int i = 0; i<ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS; i++){
 		fleet[i].alive = true;
 		fleet[i].x_pos = ALIEN_FLEET_START_POS_X + ((i % ALIEN_FLEET_COLUMNS) * (ALIEN_BOX_X + ALIEN_SPACING));
@@ -528,15 +545,18 @@ void add_event(double delay, void (*func)(unsigned long long), unsigned long lon
 
 void event_handler()
 {
-	if (!events.empty()){
-		Event top_event = events.top();
-		if (get_curtime() >= top_event.event.first){
-			events.top().event.second.first(events.top().event.second.second);
-			events.pop();
+	if (clean_events){
+		while(!events.empty()) events.pop();
+		clean_events = false;
+	}
+	else{
+		if (!events.empty()){
+			if (get_curtime() >= events.top().event.first){
+				events.top().event.second.first(events.top().event.second.second);
+				events.pop();
+			}
 		}
 	}
-
-	usleep(EVENT_HANDLER_DELAY);
 }
 
 
@@ -561,10 +581,10 @@ int main(int argc, char * argv[])
 	glutSpecialUpFunc(&special_up_call);
 	glutDisplayFunc(&draw_all);
 	glutIdleFunc(&event_handler);
-	reset();
+	reset(0);
 
 	//Incializar o desenho
-	glutTimerFunc(0, &redraw, 0);
+	//glutTimerFunc(0, &redraw, 0);
 	glutMainLoop();
 	return 0;
 }
