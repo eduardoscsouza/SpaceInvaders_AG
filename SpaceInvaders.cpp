@@ -45,7 +45,7 @@ char alien_missile_state;
 int ship_lives, alien_lives;
 
 unsigned long long current_game = 0;
-double time_multiplier = 0.5;
+double time_multiplier = 0.1;
 priority_queue<Event, vector<Event>, greater<Event> > events;
 
 Network * cur_network = NULL;
@@ -438,15 +438,19 @@ void network_keypress(unsigned long long value)
 
 void get_input()
 {
-	//AlienShip fleet[ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS];
-	//int fleet_direction;
-	//GLfloat missile_x, missile_y;
-	//bool missile_firing;
-	//bool game_over;
-	//GLfloat alien_missile_x, alien_missile_y;
-	//char alien_missile_state;
-	//int ship_lives, alien_lives;
-	network_input[0] = ship_x;
+	int n_aliens = ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS;
+	for (int i=0; i<n_aliens; i++){
+		network_input[i*3] = fleet[i].x_pos;
+		network_input[i*3 + 1] = fleet[i].y_pos;
+		network_input[i*3 + 2] = fleet[i].alive;
+	}
+	network_input[3*n_aliens] = ship_x;
+	network_input[3*n_aliens + 1] = fleet_direction;
+	network_input[3*n_aliens + 2] = alien_missile_x;
+	network_input[3*n_aliens + 3] = alien_missile_y;
+	network_input[3*n_aliens + 4] = alien_missile_state;
+	network_input[3*n_aliens + 5] = ship_lives;
+	network_input[3*n_aliens + 6] = alien_lives;
 }
 
 void network_action(unsigned long long value)
