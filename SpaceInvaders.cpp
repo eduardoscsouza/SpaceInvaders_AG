@@ -44,7 +44,7 @@ typedef struct
 
 GLfloat ship_x;
 char ship_dir;
-AlienShip *fleet;
+AlienShip fleet[ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS];
 int fleet_direction = ALIEN_FLEET_RIGHT_MOV;
 GLfloat missile_x, missile_y;
 bool missile_firing;
@@ -73,6 +73,8 @@ void move_ship(int);
 void move_alien_fleet(int);
 
 void alien_fire(int);
+
+void reset();
 
 
 
@@ -321,24 +323,6 @@ void detect_colision()
 
 
 /*
-Constroi a matriz de aliens, iniciando suas posicoes com espacamento entre um e outro
-*/
-void build_alien_fleet()
-{
-	int i;
-	fleet = (AlienShip*)malloc(sizeof(AlienShip) * ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS);
-
-	for (i = 0; i < ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS; i++)
-	{
-		fleet[i].alive = true;
-		fleet[i].x_pos = ALIEN_FLEET_START_POS_X + ((i % ALIEN_FLEET_COLUMNS) * (ALIEN_BOX_X + ALIEN_SPACING));
-		fleet[i].y_pos = ALIEN_FLEET_START_POS_Y - ((i / ALIEN_FLEET_COLUMNS) * (ALIEN_BOX_Y + ALIEN_SPACING));
-	}
-}
-
-
-
-/*
 Funcao chamada quando uma tecla especial
 do teclado e solta
 */
@@ -371,6 +355,7 @@ void keyboard_down_call(unsigned char key, int x, int y)
 			missile_y = SHIP_Y_OFFSET + (SHIP_SCALE * 0.5f) + (MISSILE_SCALE * 0.3f);
 		}
 	}
+	else if (key == 'r') reset();
 }
 
 
@@ -474,6 +459,28 @@ void alien_fire(int value)
 
 
 
+void reset()
+{
+	ship_x = 0.0f;
+	ship_dir = 0;
+	alien_missile_state = missile_firing = 0;
+	alien_missile_x = alien_missile_y = missile_x = missile_y = -1.0f;
+	game_over = false;
+	ship_lives = 3;
+	alien_lives = ALIEN_FLEET_COLUMNS * ALIEN_FLEET_ROWS;
+	for (int i = 0; i<ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS; i++){
+		fleet[i].alive = true;
+		fleet[i].x_pos = ALIEN_FLEET_START_POS_X + ((i % ALIEN_FLEET_COLUMNS) * (ALIEN_BOX_X + ALIEN_SPACING));
+		fleet[i].y_pos = ALIEN_FLEET_START_POS_Y - ((i / ALIEN_FLEET_COLUMNS) * (ALIEN_BOX_Y + ALIEN_SPACING));
+	}
+	
+	glutTimerFunc(0, &move_ship, 0);
+	glutTimerFunc(0, &move_missile, 0);
+	glutTimerFunc(750, &move_alien_fleet, 0);
+}
+
+
+
 int main(int argc, char * argv[])
 {
 	//Inicializacao do glut
@@ -486,13 +493,6 @@ int main(int argc, char * argv[])
 	//Setar as variabeis globais e parametros do OpenGL
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glMatrixMode(GL_MODELVIEW);
-	ship_x = 0.0f;
-	ship_dir = 0;
-	alien_missile_state = missile_firing = 0;
-	alien_missile_x = alien_missile_y = missile_x = missile_y = -1.0f;
-	game_over = false;
-	ship_lives = 3;
-	alien_lives = ALIEN_FLEET_COLUMNS * ALIEN_FLEET_ROWS;
 
 	//Setar as funcoes de callback
 	glutIgnoreKeyRepeat(1);
@@ -500,12 +500,8 @@ int main(int argc, char * argv[])
 	glutKeyboardFunc(&keyboard_down_call);
 	glutSpecialUpFunc(&special_up_call);
 	glutDisplayFunc(&draw_all);
-	glutTimerFunc(0, &move_ship, 0);
-	glutTimerFunc(0, &move_missile, 0);
-	glutTimerFunc(750, &move_alien_fleet, 0);
+	reset();
 
-	build_alien_fleet();
 	glutMainLoop();
-	free(fleet);
 	return 0;
 }
