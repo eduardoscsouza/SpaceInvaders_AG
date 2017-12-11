@@ -27,15 +27,8 @@
 
 #define FPS 30
 
-typedef struct
-{
-	GLfloat x_pos;
-	GLfloat y_pos;
-	bool alive;
-}AlienShip;
-
 void draw_ship();
-void draw_alien(GLfloat, GLfloat);
+void draw_alien(float, float);
 void draw_fleet();
 void draw_missile();
 void draw_all();
@@ -56,6 +49,8 @@ void move_alien_fleet(int);
 void alien_fire(int);
 
 void reset();
+
+double time_multiplier = 1.0f;
 
 
 

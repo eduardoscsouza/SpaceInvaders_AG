@@ -1,10 +1,16 @@
-#include <SaceInvaders.h>
+#include "SpaceInvaders.h"
 #include <GL/glut.h>
 #include <cstdlib>
 #include <cmath>
 
 #define POS(i, j) (a * ALIEN_FLEET_COLUMNS + j)
 #define EUCL_DIST(x1, y1, x2, y2) (sqrt(((x1)-(x2)) * ((x1)-(x2)) + ((y1)-(y2)) * ((y1)-(y2))))
+
+typedef struct
+{
+	GLfloat x_pos, y_pos;
+	bool alive;
+}AlienShip;
 
 GLfloat ship_x;
 char ship_dir;
@@ -17,7 +23,6 @@ GLfloat alien_missile_x, alien_missile_y;
 char alien_missile_state;
 int ship_lives, alien_lives;
 int current_game = 0;
-double time_multiplier = 1.0f;
 
 
 
