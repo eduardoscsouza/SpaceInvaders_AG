@@ -30,8 +30,8 @@
 
 #define NEURAL_NETWORK_DELAY 10000
 #define NEURAL_NETWORK_KEY_UP_DELAY 2000
-#define NEURAL_NETWORK_INPUT_SIZE (3*ALIEN_FLEET_ROWS*ALIEN_FLEET_COLUMNS + 7)
 #define NEURAL_NETWORK_N_LAYERS 3
+#define NEURAL_NETWORK_INPUT_SIZE (3*ALIEN_FLEET_ROWS*ALIEN_FLEET_COLUMNS + 7)
 #define NEURAL_NETWORK_LAYERS_SIZES {100, 100, 4}
 #define NEURAL_NETWORK_LAYERS_ACTVS {&sigm, &sigm, &sigm}
 
@@ -40,7 +40,7 @@
 #define FPS 30
 
 void draw_ship();
-void draw_alien(float, float);
+void draw_alien(GLfloat, GLfloat);
 void draw_fleet();
 void draw_missile();
 void draw_all();
@@ -59,8 +59,8 @@ void move_alien_fleet(unsigned long long);
 void alien_fire(unsigned long long);
 
 Network * build_network();
-void network_keypress(unsigned long long);
 void get_input();
+void network_keypress(unsigned long long);
 void network_action(unsigned long long);
 
 void end_game();

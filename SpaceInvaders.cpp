@@ -410,6 +410,23 @@ Network * build_network()
 	return new_network(NEURAL_NETWORK_N_LAYERS, aux_layers_sizes, aux_layers_actvs, NEURAL_NETWORK_INPUT_SIZE);
 }
 
+void get_input()
+{
+	int n_aliens = ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS;
+	for (int i=0; i<n_aliens; i++){
+		network_input[i*3] = fleet[i].x_pos;
+		network_input[i*3 + 1] = fleet[i].y_pos;
+		network_input[i*3 + 2] = fleet[i].alive;
+	}
+	network_input[3*n_aliens] = ship_x;
+	network_input[3*n_aliens + 1] = fleet_direction;
+	network_input[3*n_aliens + 2] = alien_missile_x;
+	network_input[3*n_aliens + 3] = alien_missile_y;
+	network_input[3*n_aliens + 4] = alien_missile_state;
+	network_input[3*n_aliens + 5] = ship_lives;
+	network_input[3*n_aliens + 6] = alien_lives;
+}
+
 void network_keypress(unsigned long long value)
 {
 	switch (value) {
@@ -428,29 +445,9 @@ void network_keypress(unsigned long long value)
 		case ' ':
 			keyboard_down_call(' ', 0, 0);
 			break;
-		case -' ':
-			keyboard_down_call(' ', 0, 0);
-			break;
 		default:
 			break;
 	}
-}
-
-void get_input()
-{
-	int n_aliens = ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS;
-	for (int i=0; i<n_aliens; i++){
-		network_input[i*3] = fleet[i].x_pos;
-		network_input[i*3 + 1] = fleet[i].y_pos;
-		network_input[i*3 + 2] = fleet[i].alive;
-	}
-	network_input[3*n_aliens] = ship_x;
-	network_input[3*n_aliens + 1] = fleet_direction;
-	network_input[3*n_aliens + 2] = alien_missile_x;
-	network_input[3*n_aliens + 3] = alien_missile_y;
-	network_input[3*n_aliens + 4] = alien_missile_state;
-	network_input[3*n_aliens + 5] = ship_lives;
-	network_input[3*n_aliens + 6] = alien_lives;
 }
 
 void network_action(unsigned long long value)
@@ -475,11 +472,7 @@ void network_action(unsigned long long value)
 	add_event(0, &network_keypress, key);
 	add_event(NEURAL_NETWORK_KEY_UP_DELAY, &network_keypress, -key);
 
-	if (output[output_size-1] >= 0.5f){
-		key = ' ';
-		add_event(0, &network_keypress, key);
-		add_event(NEURAL_NETWORK_KEY_UP_DELAY, &network_keypress, -key);
-	}
+	if (output[output_size-1] >= 0.5f) add_event(0, &network_keypress, ' ');
 
 	free(output);
 	if (!game_over) add_event(NEURAL_NETWORK_DELAY, &network_action, value);
@@ -503,6 +496,8 @@ void reset()
 	game_over = false;
 	ship_lives = 3;
 	alien_lives = ALIEN_FLEET_COLUMNS * ALIEN_FLEET_ROWS;
+	if (cur_network != NULL) delete_network(cur_network);
+	cur_network = build_network();
 	while(!events.empty()) events.pop();
 	for (int i = 0; i<ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS; i++){
 		fleet[i].alive = true;
@@ -566,7 +561,6 @@ int main(int argc, char * argv[])
 	glutSpecialUpFunc(&special_up_call);
 	glutDisplayFunc(&draw_all);
 	glutIdleFunc(&event_handler);
-	cur_network = build_network();
 	reset();
 
 	//Incializar o desenho
