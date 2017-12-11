@@ -3,7 +3,6 @@
 #include <cstdlib>
 #include <cmath>
 
-#define POS(i, j) (a * ALIEN_FLEET_COLUMNS + j)
 #define EUCL_DIST(x1, y1, x2, y2) (sqrt(((x1)-(x2)) * ((x1)-(x2)) + ((y1)-(y2)) * ((y1)-(y2))))
 
 typedef struct
@@ -48,8 +47,7 @@ Desenha um alien na posicao x_coord, y_coord, de design definido por 'type'
 */
 void draw_alien(GLfloat x_coord, GLfloat y_coord, int type)
 {
-	if (type == 0)
-	{
+	if (type == 0){
 		glBegin(GL_LINE_STRIP);
 
 		glColor3f(1.0f, 0.4f, 0.0f);
@@ -70,8 +68,7 @@ void draw_alien(GLfloat x_coord, GLfloat y_coord, int type)
 
 		glEnd();
 	}
-	else if (type == 1)
-	{
+	else if (type == 1){
 		glBegin(GL_LINE_STRIP);
 		
 		glColor3f(1.0f, 1.0f, 1.0f);
@@ -129,10 +126,7 @@ Desenha a frota de aliens, pulando os aliens que ja estao mortos
 */
 void draw_fleet()
 {
-	int i;
-
-	for (i = 0; i < ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS; i++)
-	{
+	for (int i=0; i<ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS; i++){
 		if (fleet[i].alive){
 			glPushMatrix();
 
@@ -166,8 +160,6 @@ void draw_missile()
 
 	glEnd();
 }
-
-
 
 /*
 Desenha a cena completa
@@ -345,26 +337,19 @@ void move_alien_fleet(int value)
 {
 	if ((value>>1) != current_game) return;
 
-	int i;
 	bool move_down = false;
-	
-	if ((fleet[ALIEN_FLEET_COLUMNS - 1].x_pos + 2 * ALIEN_BOX_X >= 1.0f
-		|| fleet[0].x_pos <= -1.08f) && !(value & 1))
-		move_down = true;
+	if (((fleet[ALIEN_FLEET_COLUMNS - 1].x_pos + 2 * ALIEN_BOX_X >= 1.0f) || (fleet[0].x_pos <= -1.08f)) && !(value & 1)) move_down = true;
 
-	if (move_down)
-	{
-		for (i = 0; i < ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS; i++){
+	if (move_down){
+		for (int i = 0; i < ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS; i++){
 			fleet[i].y_pos -= ALIEN_BOX_Y;
 			if (fleet[i].alive && fleet[i].y_pos<=SHIP_Y_OFFSET+0.25) game_over=true;
 		}
 		fleet_direction *= -1;
 		if (!game_over) glutTimerFunc(ALIEN_FLEET_DELAY, move_alien_fleet, value | 1);
 	}
-	else
-	{
-		for (i = 0; i < ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS; i++)
-			fleet[i].x_pos += 0.25 * ALIEN_BOX_X * fleet_direction;
+	else{
+		for (int i = 0; i < ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS; i++) fleet[i].x_pos += 0.25 * ALIEN_BOX_X * fleet_direction;
 		if (!game_over) glutTimerFunc(ALIEN_FLEET_DELAY, move_alien_fleet, value & (~1));
 	}
 }
@@ -380,7 +365,7 @@ void alien_fire(int value)
 	if (value != current_game) return;
 	
 	int alien = -1;
-	do {
+	do{
 		alien = rand() % (ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS);
 	}while(!fleet[alien].alive);
 

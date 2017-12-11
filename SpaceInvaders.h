@@ -36,8 +36,6 @@ void redraw();
 
 void detect_colision();
 
-void build_alien_fleet();
-
 void special_up_call(int, int, int);
 void special_down_call(int, int, int);
 void keyboard_down_call(unsigned char, int, int);
@@ -50,7 +48,7 @@ void alien_fire(int);
 
 void reset();
 
-double time_multiplier = 1.0f;
+double time_multiplier = 1.0;
 
 
 
