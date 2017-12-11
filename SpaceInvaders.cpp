@@ -49,6 +49,8 @@ unsigned long long current_game = 0;
 double time_multiplier = 0.5;
 priority_queue<Event, vector<Event>, greater<Event> > events;
 
+Network * cur_network = NULL;
+nn_float_t network_input[NEURAL_NETWORK_INPUT_SIZE];
 
 
 /*
@@ -398,6 +400,14 @@ void alien_fire(unsigned long long value)
 	alien_missile_state = 2;
 	alien_missile_x = fleet[alien].x_pos + 0.2;
 	alien_missile_y = fleet[alien].y_pos - 0.1;
+}
+
+
+
+void network_action(unsigned long long value)
+{
+	nn_float_t * output = network_forward(cur_network, network_input);
+	free(output);
 }
 
 

@@ -25,9 +25,11 @@
 #define ALIEN_FLEET_LEFT_MOV -1
 #define ALIEN_FLEET_DELAY 300000.0
 
-#define EVENT_HANDLER_DELAY 20
-
 #define NEURAL_NETWORK_DELAY 10000
+#define NEURAL_NETWORK_INPUT_SIZE 10
+#define NEURAL_NETWORK_OUTPUT_SIZE 4
+
+#define EVENT_HANDLER_DELAY 20
 
 #define FPS 30
 
@@ -49,6 +51,8 @@ void move_ship(unsigned long long);
 void move_alien_fleet(unsigned long long);
 
 void alien_fire(unsigned long long);
+
+void network_action(unsigned long long);
 
 void end_game();
 void reset();
