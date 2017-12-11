@@ -5,7 +5,6 @@
 #include <queue>
 #include <unistd.h>
 #include <sys/time.h>
-#include <stdio.h>
 
 #define EUCL_DIST(x1, y1, x2, y2) (sqrt(((x1)-(x2)) * ((x1)-(x2)) + ((y1)-(y2)) * ((y1)-(y2))))
 
@@ -20,11 +19,11 @@ typedef struct
 class Event
 {
 public:
-	pair<double, pair<void (*)(int), int> > event;
+	pair<double, pair<void (*)(unsigned long long), unsigned long long> > event;
 
-	Event(double time, void (*func)(int), int arg)
+	Event(double time, void (*func)(unsigned long long), unsigned long long arg)
 	{
-		event = pair<double, pair<void (*)(int), int> >(time, pair<void (*)(int), int>(func, arg));
+		event = pair<double, pair<void (*)(unsigned long long), unsigned long long> >(time, pair<void (*)(unsigned long long), unsigned long long>(func, arg));
 	}
 
 	bool operator > (const Event& other) const
@@ -44,7 +43,8 @@ GLfloat alien_missile_x, alien_missile_y;
 char alien_missile_state;
 int ship_lives, alien_lives;
 
-int current_game = 0;
+unsigned long long current_game = 0;
+double time_multiplier = 0.5;
 priority_queue<Event, vector<Event>, greater<Event> > events;
 
 
@@ -275,7 +275,7 @@ void detect_colision()
 		}
 	}
 
-	if(alien_lives==0 || ship_lives==0) game_over=true;
+	if(alien_lives==0 || ship_lives==0) end_game();
 }
 
 
@@ -322,8 +322,10 @@ void keyboard_down_call(unsigned char key, int x, int y)
 Funcao que move o seu missel e o
 missel dos alienigenas
 */
-void move_missile(int value)
+void move_missile(unsigned long long value)
 {
+	if (value != current_game || game_over) return;
+
 	if (missile_firing) missile_y += MISSILE_STEP;
 	if (alien_missile_state==2) alien_missile_y -= MISSILE_STEP;
 	
@@ -340,8 +342,10 @@ void move_missile(int value)
 Funcao que move a sua nave de acordo
 com as teclas pressionadas
 */
-void move_ship(int value)
+void move_ship(unsigned long long value)
 {
+	if (value != current_game || game_over) return;
+
 	if (ship_dir) {
 		ship_x += ship_dir * SHIP_STEP;
 		ship_x = (ship_x>1.0f) ? 1.0f : ((ship_x<-1.0f) ? -1.0f : ship_x);
@@ -353,22 +357,24 @@ void move_ship(int value)
 /*
 Essa funcao move a frota de aliens atraves da tela, movendo para baixo quando atinge a borda
 */
-void move_alien_fleet(int value)
+void move_alien_fleet(unsigned long long value)
 {
+	if ((value>>1) != current_game || game_over) return;
+
 	bool move_down = false;
-	if (((fleet[ALIEN_FLEET_COLUMNS - 1].x_pos + 2 * ALIEN_BOX_X >= 1.0f) || (fleet[0].x_pos <= -1.08f)) && (!value)) move_down = true;
+	if (((fleet[ALIEN_FLEET_COLUMNS - 1].x_pos + 2 * ALIEN_BOX_X >= 1.0f) || (fleet[0].x_pos <= -1.08f)) && !(value & 1)) move_down = true;
 
 	if (move_down){
 		for (int i = 0; i < ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS; i++){
 			fleet[i].y_pos -= ALIEN_BOX_Y;
-			if (fleet[i].alive && fleet[i].y_pos<=SHIP_Y_OFFSET+0.25) game_over=true;
+			if (fleet[i].alive && fleet[i].y_pos<=SHIP_Y_OFFSET+0.25) end_game();
 		}
 		fleet_direction *= -1;
-		if (!game_over) add_event(ALIEN_FLEET_DELAY, move_alien_fleet, 1);
+		if (!game_over) add_event(ALIEN_FLEET_DELAY, move_alien_fleet, value | 1);
 	}
 	else{
 		for (int i = 0; i < ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS; i++) fleet[i].x_pos += 0.25 * ALIEN_BOX_X * fleet_direction;
-		if (!game_over) add_event(ALIEN_FLEET_DELAY, move_alien_fleet, 0);
+		if (!game_over) add_event(ALIEN_FLEET_DELAY, move_alien_fleet, value & (~1));
 	}
 }
 
@@ -378,10 +384,10 @@ void move_alien_fleet(int value)
 Funcao que escolhe aleatoriamente um
 alienigena para atirar
 */
-void alien_fire(int value)
-{
-	if (value != current_game) return;
-	
+void alien_fire(unsigned long long value)
+{	
+	if (value != current_game || game_over) return;
+
 	int alien = -1;
 	do{
 		alien = rand() % (ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS);
@@ -394,11 +400,14 @@ void alien_fire(int value)
 
 
 
+void end_game()
+{
+	game_over = true;
+	current_game++;
+}
+
 void reset()
 {
-	priority_queue<Event, vector<Event>, greater<Event> > empty;
-	swap(events, empty);
-	current_game++;
 	ship_x = 0.0f;
 	ship_dir = 0;
 	fleet_direction = ALIEN_FLEET_RIGHT_MOV;
@@ -407,15 +416,16 @@ void reset()
 	game_over = false;
 	ship_lives = 3;
 	alien_lives = ALIEN_FLEET_COLUMNS * ALIEN_FLEET_ROWS;
+	while(!events.empty()) events.pop();
 	for (int i = 0; i<ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS; i++){
 		fleet[i].alive = true;
 		fleet[i].x_pos = ALIEN_FLEET_START_POS_X + ((i % ALIEN_FLEET_COLUMNS) * (ALIEN_BOX_X + ALIEN_SPACING));
 		fleet[i].y_pos = ALIEN_FLEET_START_POS_Y - ((i / ALIEN_FLEET_COLUMNS) * (ALIEN_BOX_Y + ALIEN_SPACING));
 	}
 
-	add_event(0, &move_ship, 0);
-	add_event(0, &move_missile, 0);
-	add_event(750, &move_alien_fleet, 0);
+	add_event(0, &move_ship, current_game);
+	add_event(0, &move_missile, current_game);
+	add_event(750, &move_alien_fleet, current_game<<1);
 }
 
 
@@ -427,10 +437,10 @@ double get_curtime()
 	return (aux_time.tv_sec*1000000.0 + aux_time.tv_usec);
 }
 
-void add_event(double delay, void (*func)(int), int arg)
+void add_event(double delay, void (*func)(unsigned long long), unsigned long long arg)
 {
 	double curtime = get_curtime();
-	events.push(Event(curtime + delay, func, arg));
+	events.push(Event(curtime + (delay*time_multiplier), func, arg));
 }
 
 void event_handler()
