@@ -6,13 +6,13 @@
 #define SHIP_SCALE 0.20f
 #define SHIP_Y_OFFSET -0.9f
 #define SHIP_STEP 0.02f
-#define SHIP_DELAY (30*time_multiplier)
+#define SHIP_DELAY (30000.0*time_multiplier)
 
 #define MISSILE_SCALE 0.07f
 #define MISSILE_STEP 0.05f
-#define MISSILE_DELAY (30*time_multiplier)
+#define MISSILE_DELAY (30000.0*time_multiplier)
 
-#define ALIEN_MISSILE_WAIT_TIME (1000*time_multiplier)
+#define ALIEN_MISSILE_WAIT_TIME (1000000.0*time_multiplier)
 
 #define ALIEN_FLEET_ROWS 6
 #define ALIEN_FLEET_COLUMNS 8
@@ -23,11 +23,11 @@
 #define ALIEN_FLEET_START_POS_Y 1.0f
 #define ALIEN_FLEET_RIGHT_MOV 1
 #define ALIEN_FLEET_LEFT_MOV -1
-#define ALIEN_FLEET_DELAY (300*time_multiplier)
+#define ALIEN_FLEET_DELAY (300000.0*time_multiplier)
 
 #define FPS 30
 
-#define EVENT_HANDLE_DELAY 20
+#define EVENT_HANDLER_DELAY 20
 
 void draw_ship();
 void draw_alien(float, float);
@@ -51,6 +51,7 @@ void alien_fire(int);
 void reset();
 
 double get_curtime();
+void add_event(double, void (*)(int), int);
 void event_handler();
 
 double time_multiplier = 1.0;

@@ -324,18 +324,16 @@ missel dos alienigenas
 */
 void move_missile(int value)
 {
-	if (value != current_game) return;
-
 	if (missile_firing) missile_y += MISSILE_STEP;
 	if (alien_missile_state==2) alien_missile_y -= MISSILE_STEP;
 	
 	if (missile_firing || (alien_missile_state==2)) detect_colision();
 	if (alien_missile_state==0){
 		alien_missile_state = 1;
-		if (!game_over) glutTimerFunc(ALIEN_MISSILE_WAIT_TIME, &alien_fire, value);
+		if (!game_over) add_event(ALIEN_MISSILE_WAIT_TIME, &alien_fire, value);
 	}
 
-	if (!game_over) glutTimerFunc(MISSILE_DELAY, &move_missile, value);
+	if (!game_over) add_event(MISSILE_DELAY, &move_missile, value);
 }
 
 /*
@@ -344,14 +342,12 @@ com as teclas pressionadas
 */
 void move_ship(int value)
 {
-	if (value != current_game) return;
-
 	if (ship_dir) {
 		ship_x += ship_dir * SHIP_STEP;
 		ship_x = (ship_x>1.0f) ? 1.0f : ((ship_x<-1.0f) ? -1.0f : ship_x);
 	}
 
-	if (!game_over) glutTimerFunc(SHIP_DELAY, &move_ship, value);
+	if (!game_over) add_event(SHIP_DELAY, &move_ship, value);
 }
 
 /*
@@ -359,10 +355,8 @@ Essa funcao move a frota de aliens atraves da tela, movendo para baixo quando at
 */
 void move_alien_fleet(int value)
 {
-	if ((value>>1) != current_game) return;
-
 	bool move_down = false;
-	if (((fleet[ALIEN_FLEET_COLUMNS - 1].x_pos + 2 * ALIEN_BOX_X >= 1.0f) || (fleet[0].x_pos <= -1.08f)) && !(value & 1)) move_down = true;
+	if (((fleet[ALIEN_FLEET_COLUMNS - 1].x_pos + 2 * ALIEN_BOX_X >= 1.0f) || (fleet[0].x_pos <= -1.08f)) && (!value)) move_down = true;
 
 	if (move_down){
 		for (int i = 0; i < ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS; i++){
@@ -370,11 +364,11 @@ void move_alien_fleet(int value)
 			if (fleet[i].alive && fleet[i].y_pos<=SHIP_Y_OFFSET+0.25) game_over=true;
 		}
 		fleet_direction *= -1;
-		if (!game_over) glutTimerFunc(ALIEN_FLEET_DELAY, move_alien_fleet, value | 1);
+		if (!game_over) add_event(ALIEN_FLEET_DELAY, move_alien_fleet, 1);
 	}
 	else{
 		for (int i = 0; i < ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS; i++) fleet[i].x_pos += 0.25 * ALIEN_BOX_X * fleet_direction;
-		if (!game_over) glutTimerFunc(ALIEN_FLEET_DELAY, move_alien_fleet, value & (~1));
+		if (!game_over) add_event(ALIEN_FLEET_DELAY, move_alien_fleet, 0);
 	}
 }
 
@@ -402,6 +396,8 @@ void alien_fire(int value)
 
 void reset()
 {
+	priority_queue<Event, vector<Event>, greater<Event> > empty;
+	swap(events, empty);
 	current_game++;
 	ship_x = 0.0f;
 	ship_dir = 0;
@@ -417,9 +413,9 @@ void reset()
 		fleet[i].y_pos = ALIEN_FLEET_START_POS_Y - ((i / ALIEN_FLEET_COLUMNS) * (ALIEN_BOX_Y + ALIEN_SPACING));
 	}
 
-	glutTimerFunc(0, &move_ship, current_game);
-	glutTimerFunc(0, &move_missile, current_game);
-	glutTimerFunc(750, &move_alien_fleet, current_game<<1);
+	add_event(0, &move_ship, 0);
+	add_event(0, &move_missile, 0);
+	add_event(750, &move_alien_fleet, 0);
 }
 
 
@@ -429,6 +425,12 @@ double get_curtime()
 	struct timeval aux_time;
 	gettimeofday(&aux_time, NULL);
 	return (aux_time.tv_sec*1000000.0 + aux_time.tv_usec);
+}
+
+void add_event(double delay, void (*func)(int), int arg)
+{
+	double curtime = get_curtime();
+	events.push(Event(curtime + delay, func, arg));
 }
 
 void event_handler()
@@ -441,7 +443,7 @@ void event_handler()
 		}
 	}
 
-	usleep(EVENT_HANDLE_DELAY);
+	usleep(EVENT_HANDLER_DELAY);
 }
 
 
