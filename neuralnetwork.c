@@ -3,6 +3,7 @@
 //#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <omp.h>
 #include <math.h>
 #include <unistd.h>
@@ -147,6 +148,32 @@ void delete_network(Network * network)
 	for (i=0; i<network->n_layers; i++) delete_layer(network->layers[i]);
 	free(network->layers);
 	free(network);
+}
+
+Network * copy_network(Network * cur_network)
+{
+	int i, j;
+	nn_size_t * layers_sizes = (nn_size_t*) malloc(cur_network->n_layers*sizeof(nn_size_t));
+	nn_float_t (**layers_actvs)(nn_float_t) = (nn_float_t (**)(nn_float_t)) malloc(cur_network->n_layers*sizeof(nn_float_t (*)(nn_float_t)));
+	for (i=0; i<cur_network->n_layers; i++){
+		layers_sizes[i] = cur_network->layers[i]->n_neurons;
+		layers_actvs[i] = cur_network->layers[i]->actv;
+	}
+	Network * network = new_network(cur_network->n_layers, layers_sizes, layers_actvs, cur_network->in_size);
+
+	for (i=0; i<cur_network->n_layers; i++){
+		for (j=0; j<cur_network->layers[i]->n_neurons; j++){
+			memcpy(
+				network->layers[i]->neurons[j]->weights,
+				cur_network->layers[i]->neurons[j]->weights,
+				cur_network->layers[i]->neurons[j]->n_dim*sizeof(nn_float_t)
+			);
+		}
+	}
+
+	free(layers_sizes);
+	free(layers_actvs);
+	return network;
 }
 
 nn_float_t * network_forward(Network * network, nn_float_t * in)

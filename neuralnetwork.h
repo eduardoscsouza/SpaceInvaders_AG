@@ -40,6 +40,7 @@ void print_layer(Layer *);
 
 Network * new_network(nn_size_t, nn_size_t *, nn_float_t (**)(nn_float_t), nn_size_t);
 void delete_network(Network *);
+Network * copy_network(Network *);
 nn_float_t * network_forward(Network *, nn_float_t *);
 void print_network(Network *);
 
