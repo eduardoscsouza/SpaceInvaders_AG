@@ -486,6 +486,8 @@ void end_game()
 {
 	if (game_over) return;
 	game_over = true;
+	current_game++;
+	clean_events = true;
 
 	printf("End of game %llu\n", current_game);
 	if (current_game == MAX_GAMES-2){
@@ -493,9 +495,7 @@ void end_game()
 		glutTimerFunc(0, &redraw, 0);
 	}
 	else if (current_game > MAX_GAMES-2) exit(0);
-
-	current_game++;
-	clean_events = true;
+	
 	glutTimerFunc(0, &reset, 0);
 }
 
