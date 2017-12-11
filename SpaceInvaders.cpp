@@ -35,6 +35,8 @@ Leonardo Cesar Cerqueira
 #define EUCL_DIST(x1, y1, x2, y2) (sqrt(((x1)-(x2)) * ((x1)-(x2)) + ((y1)-(y2)) * ((y1)-(y2))))
 #define ALIEN_MISSILE_WAIT_TIME 1000
 
+#define FPS 30
+
 typedef struct
 {
 	GLfloat x_pos;
@@ -58,6 +60,7 @@ void draw_alien(GLfloat, GLfloat);
 void draw_fleet();
 void draw_missile();
 void draw_all();
+void redraw();
 
 void detect_colision();
 
@@ -265,6 +268,16 @@ void draw_all()
 	glFlush();
 }
 
+/*
+Funcao que constantemente desenha a cena
+com uma taxa de 60FPS
+*/
+void redraw(int value)
+{
+	glutPostRedisplay();
+	glutTimerFunc(1000/FPS, &redraw, 0);
+}
+
 
 
 /*
@@ -358,10 +371,7 @@ void move_missile(int value)
 		if (!game_over) glutTimerFunc(ALIEN_MISSILE_WAIT_TIME, &alien_fire, 0);
 	}
 
-	if (!game_over){
-		glutPostRedisplay();
-		glutTimerFunc(MISSILE_DELAY, &move_missile, 0);
-	}
+	if (!game_over) glutTimerFunc(MISSILE_DELAY, &move_missile, 0);
 }
 
 /*
@@ -373,8 +383,6 @@ void move_ship(int value)
 	if (ship_dir) {
 		ship_x += ship_dir * SHIP_STEP;
 		ship_x = (ship_x>1.0f) ? 1.0f : ((ship_x<-1.0f) ? -1.0f : ship_x);
-
-		if (!game_over) glutPostRedisplay();
 	}
 
 	if (!game_over) glutTimerFunc(SHIP_DELAY, &move_ship, 0);
@@ -399,19 +407,13 @@ void move_alien_fleet(int value)
 			if (fleet[i].alive && fleet[i].y_pos<=SHIP_Y_OFFSET+0.25) game_over=true;
 		}
 		fleet_direction *= -1;
-		if (!game_over){ 
-			glutPostRedisplay();
-			glutTimerFunc(ALIEN_FLEET_DELAY, move_alien_fleet, 1);
-		}
+		if (!game_over) glutTimerFunc(ALIEN_FLEET_DELAY, move_alien_fleet, 1);
 	}
 	else
 	{
 		for (i = 0; i < ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS; i++)
 			fleet[i].x_pos += 0.25 * ALIEN_BOX_X * fleet_direction;
-		if (!game_over) {
-			glutPostRedisplay();
-			glutTimerFunc(ALIEN_FLEET_DELAY, move_alien_fleet, 0);
-		}
+		if (!game_over) glutTimerFunc(ALIEN_FLEET_DELAY, move_alien_fleet, 0);
 	}
 }
 
@@ -478,6 +480,8 @@ int main(int argc, char * argv[])
 	glutDisplayFunc(&draw_all);
 	reset();
 
+	//Incializar o desenho
+	glutTimerFunc(0, &redraw, 0);
 	glutMainLoop();
 	return 0;
 }
