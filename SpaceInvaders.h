@@ -25,9 +25,11 @@
 #define ALIEN_FLEET_LEFT_MOV -1
 #define ALIEN_FLEET_DELAY 300000.0
 
-#define FPS 30
-
 #define EVENT_HANDLER_DELAY 20
+
+#define NEURAL_NETWORK_DELAY 10000
+
+#define FPS 30
 
 void draw_ship();
 void draw_alien(float, float);

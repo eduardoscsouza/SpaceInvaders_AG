@@ -1,4 +1,6 @@
 #include "SpaceInvaders.h"
+#include "neuralnetwork.h"
+
 #include <GL/glut.h>
 #include <cstdlib>
 #include <cmath>
@@ -425,7 +427,7 @@ void reset()
 
 	add_event(0, &move_ship, current_game);
 	add_event(0, &move_missile, current_game);
-	add_event(750, &move_alien_fleet, current_game<<1);
+	add_event(0, &move_alien_fleet, current_game<<1);
 }
 
 
