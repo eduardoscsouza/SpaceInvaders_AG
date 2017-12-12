@@ -37,12 +37,12 @@
 #define NEURAL_NETWORK_LAYERS_SIZES {20, 4}
 #define NEURAL_NETWORK_LAYERS_ACTVS {&sigm, &sigm}
 
-#define POP_SIZE 10
-#define GEN 20
-#define N_ITER 10
+#define POP_SIZE 20
+#define GEN 10
+#define N_ITER 5
 #define ALIEN_KILLS 1
 #define RAFFLE_SIZE 1000000
-#define CHANCE_MUT 0.3
+#define CHANCE_MUT 0.5
 #define TX_MUT 1.0
 
 #define EVENT_HANDLER_DELAY 20

@@ -93,8 +93,8 @@ void end_game()
 		sort (old_gen.begin(), old_gen.end());
 		for (int i = 0; i < POP_SIZE; i++) {
 			printf ("%f\n", old_gen[i].first/(float)N_ITER);
-			cur_network = old_gen[i].second;
 		}
+		cur_network = best;
 		time_multiplier = 0.5;
 //		cur_network = best;
 //		if (!i_pop)	glutTimerFunc(0, &redraw, 0);
