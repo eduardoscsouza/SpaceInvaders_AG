@@ -48,7 +48,7 @@ char alien_missile_state;
 int ship_lives, alien_lives;
 
 unsigned long long current_game = 0;
-double time_multiplier = 0.0001;
+double time_multiplier = 0.01;
 bool clean_events = false;
 priority_queue<Event, vector<Event>, greater<Event> > events;
 
@@ -81,9 +81,10 @@ void end_game()
 	
 	if (i_gen < GEN)	cur_network = pop[i_pop];
 	else {
+		printf ("Best active\n");
 		time_multiplier = 0.5;
 		cur_network = best;
-		glutTimerFunc(0, &redraw, 0);
+		if (!i_pop)	glutTimerFunc(0, &redraw, 0);
 	}
 	glutTimerFunc(0, &reset, 0);
 }
@@ -122,7 +123,7 @@ void cross_neuron (Neuron * child, Neuron * mother, Neuron * father, float mut)
 {
 	for (int i = 0; i < child->n_dim + 1; i++) {
 		child->weights[i] = (mother->weights[i] + father->weights[i]) / 2.0;
-		child->weights[i] += mut;
+		child->weights[i] *= mut;
 	}
 }
 
@@ -158,7 +159,7 @@ void reproduction ()
 	while ((int)next_gen.size() < POP_SIZE) {
 		Network * mother = next_gen[rand()%ngen];
 		Network * father = next_gen[rand()%ngen];
-		float mut = 0.0;
+		float mut = 1.0;
 		if (raffle(CHANCE_MUT)) {
 			if (rand()%2)	mut += TX_MUT;
 			else			mut -= TX_MUT;
@@ -685,7 +686,7 @@ int main(int argc, char * argv[])
 	reset(0);
 
 	//Incializar o desenho
-	//glutTimerFunc(0, &redraw, 0);
+//	glutTimerFunc(0, &redraw, 0);
 	glutMainLoop();
 	return 0;
 }
