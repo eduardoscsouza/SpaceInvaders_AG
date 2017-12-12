@@ -35,6 +35,10 @@
 #define NEURAL_NETWORK_LAYERS_SIZES {100, 100, 4}
 #define NEURAL_NETWORK_LAYERS_ACTVS {&sigm, &sigm, &sigm}
 
+#define POP_SIZE 100
+#define GEN 10
+#define ALIEN_KILLS 1
+
 #define EVENT_HANDLER_DELAY 20
 
 #define MAX_GAMES 1000
@@ -72,6 +76,7 @@ double get_curtime();
 void add_event(double, void (*)(unsigned long long), unsigned long long);
 void event_handler();
 
-
+void init();
+float fitness();
 
 #endif

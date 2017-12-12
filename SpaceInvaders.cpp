@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cmath>
 #include <cfloat>
+#include <ctime>
 #include <queue>
 #include <unistd.h>
 #include <sys/time.h>
@@ -50,9 +51,58 @@ double time_multiplier = 0.0001;
 bool clean_events = false;
 priority_queue<Event, vector<Event>, greater<Event> > events;
 
-Network * cur_network = NULL;
+int i_pop = 0, i_gen = 0, id[POP_SIZE];
+Network * cur_network = NULL, * best = NULL, * pop[POP_SIZE];
+float fit_best, fit[POP_SIZE];
 nn_float_t network_input[NEURAL_NETWORK_INPUT_SIZE];
 
+void end_game()
+{
+	if (game_over) return;
+	game_over = true;
+
+	current_game++;
+	clean_events = true;
+
+	fit[i_pop] = fitness();
+	if (fit[i_pop] > fit_best) {
+		fit_best = fit[i_pop];
+		best = copy_network(pop[i_pop]);
+	}
+	printf ("Gen: %d  Pop: %d  Fit: %.3f  Best %.3f\n", i_gen, i_pop, fit[i_pop], fit_best);
+
+	i_pop++;
+	if (i_pop >= POP_SIZE) {
+		i_pop = 0;
+		i_gen++;
+		if (i_gen >= GEN) {
+			time_multiplier = 0.5;
+			glutTimerFunc(0, &redraw, 0);
+		}
+	}
+	
+	cur_network = pop[i_pop];
+	glutTimerFunc(0, &reset, 0);
+}
+
+void init () 
+{
+	for (int i = 0; i < POP_SIZE; i++) {
+		pop[i] = build_network();
+		id[i] = i;
+	}
+	cur_network = pop[0];
+	best = pop[0];
+	fit_best = FLT_MIN;
+}
+
+float fitness () {
+	float fit = 0;
+
+	fit += ALIEN_KILLS * (ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS - alien_lives);	//alien kills
+
+	return fit;
+}
 
 /*
 Desenha a nave centrada em (0, 0)
@@ -480,25 +530,6 @@ void network_action(unsigned long long value)
 	if (!game_over) add_event(NEURAL_NETWORK_DELAY, &network_action, value);
 }
 
-
-
-void end_game()
-{
-	if (game_over) return;
-	game_over = true;
-	current_game++;
-	clean_events = true;
-
-	printf("End of game %llu\n", current_game);
-	if (current_game == MAX_GAMES-2){
-		time_multiplier = 0.5;
-		glutTimerFunc(0, &redraw, 0);
-	}
-	else if (current_game > MAX_GAMES-2) exit(0);
-	
-	glutTimerFunc(0, &reset, 0);
-}
-
 void reset(int value)
 {
 	if (clean_events){
@@ -514,8 +545,10 @@ void reset(int value)
 	game_over = false;
 	ship_lives = 3;
 	alien_lives = ALIEN_FLEET_COLUMNS * ALIEN_FLEET_ROWS;
-	if (cur_network != NULL) delete_network(cur_network);
-	cur_network = build_network();
+
+//	if (cur_network != NULL) delete_network(cur_network);
+//	cur_network = build_network();
+//
 	for (int i = 0; i<ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS; i++){
 		fleet[i].alive = true;
 		fleet[i].x_pos = ALIEN_FLEET_START_POS_X + ((i % ALIEN_FLEET_COLUMNS) * (ALIEN_BOX_X + ALIEN_SPACING));
@@ -563,6 +596,8 @@ void event_handler()
 
 int main(int argc, char * argv[])
 {
+	srand(time(NULL));
+	init();
 	//Inicializacao do glut
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
