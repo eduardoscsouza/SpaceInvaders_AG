@@ -48,7 +48,7 @@ char alien_missile_state;
 int ship_lives, alien_lives;
 
 unsigned long long current_game = 0;
-double time_multiplier = 0.01;
+double time_multiplier = 0.001;
 bool clean_events = false;
 priority_queue<Event, vector<Event>, greater<Event> > events;
 
@@ -588,10 +588,10 @@ void network_action(unsigned long long value)
 	if (max_id == 0) key = 'l';
 	else if (max_id == 1) key = 'r';
 	else key = 'n';
-	add_event(0, &network_keypress, key);
-	add_event(NEURAL_NETWORK_KEY_UP_DELAY, &network_keypress, -key);
+	add_event(NEURAL_NETWORK_KEY_DELAY, &network_keypress, key);
+	add_event(2*NEURAL_NETWORK_KEY_DELAY, &network_keypress, -key);
 
-	if (output[output_size-1] >= 0.5f) add_event(0, &network_keypress, ' ');
+	if (output[output_size-1] >= 0.5f) add_event(NEURAL_NETWORK_KEY_DELAY, &network_keypress, ' ');
 
 	free(output);
 	if (!game_over) add_event(NEURAL_NETWORK_DELAY, &network_action, value);
@@ -651,7 +651,8 @@ void event_handler()
 	}
 	else{
 		if (!events.empty()){
-			if (get_curtime() >= events.top().event.first){
+			double curtime = get_curtime();
+			while (curtime >= events.top().event.first){
 				events.top().event.second.first(events.top().event.second.second);
 				events.pop();
 			}
