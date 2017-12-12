@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <cstdio>
+#include <algorithm>
 
 #define EUCL_DIST(x1, y1, x2, y2) (sqrt(((x1)-(x2)) * ((x1)-(x2)) + ((y1)-(y2)) * ((y1)-(y2))))
 
@@ -73,6 +74,7 @@ void end_game()
 
 	i_pop++;
 	if (i_pop >= POP_SIZE) {
+		reproduction();
 		i_pop = 0;
 		i_gen++;
 		if (i_gen >= GEN) {
@@ -81,7 +83,8 @@ void end_game()
 		}
 	}
 	
-	cur_network = pop[i_pop];
+	if (i_gen < GEN)	cur_network = pop[i_pop];
+	else 				cur_network = best;
 	glutTimerFunc(0, &reset, 0);
 }
 
@@ -96,12 +99,68 @@ void init ()
 	fit_best = FLT_MIN;
 }
 
-float fitness () {
+float fitness () 
+{
 	float fit = 0;
 
 	fit += ALIEN_KILLS * (ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS - alien_lives);	//alien kills
 
 	return fit;
+}
+
+bool raffle (float prob)
+{
+	return (rand()%RAFFLE_SIZE) < ceil (prob * RAFFLE_SIZE);
+}
+
+bool comp (int a, int b)
+{
+	return fit[a] < fit[b];
+}
+
+void cross_neuron (Neuron * child, Neuron * mother, Neuron * father)
+{
+	for (int i = 0; i < child->n_dim + 1; i++)
+		child->weights[i] = (mother->weights[i] + father->weights[i]) / 2.0;
+}
+
+void cross_layer (Layer * child, Layer * mother, Layer * father)
+{
+	for (int i = 0; i < child->n_neurons; i++)
+		cross_neuron (child->neurons[i], mother->neurons[i], father->neurons[i]);
+}
+
+Network * cross_network (Network * mother, Network * father)
+{
+	Network * child = build_network();
+
+	for (int i = 1; i < child->n_layers; i++) 
+		cross_layer (child->layers[i], mother->layers[i], father->layers[i]);
+
+	return child;
+}
+
+void reproduction ()
+{
+	vector <Network *> next_gen;
+	sort (id, id + POP_SIZE, comp);
+
+	for (int i = 0; i < POP_SIZE; i++) {
+		float chance = (float)(i + 1) / (float)POP_SIZE;
+		if (raffle(chance)) 
+			next_gen.push_back(pop[id[i]]);
+	}
+
+	int ngen = next_gen.size();
+
+	while ((int)next_gen.size() < POP_SIZE) {
+		Network * mother = next_gen[rand()%ngen];
+		Network * father = next_gen[rand()%ngen];
+		next_gen.push_back(cross_network(mother, father));
+	}
+
+	for (int i = 0; i < POP_SIZE; i++)
+		pop[i] = next_gen[i];
 }
 
 /*

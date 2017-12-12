@@ -38,6 +38,7 @@
 #define POP_SIZE 100
 #define GEN 10
 #define ALIEN_KILLS 1
+#define RAFFLE_SIZE 1000000
 
 #define EVENT_HANDLER_DELAY 20
 
@@ -78,5 +79,11 @@ void event_handler();
 
 void init();
 float fitness();
+bool raffle (float);
+bool comp (int, int);
+void reproduction();
+void cross_network (Neuron *, Neuron *, Neuron *);
+void cross_network (Layer *, Layer *, Layer *);
+Network * cross_network (Network *, Network *);
 
 #endif
