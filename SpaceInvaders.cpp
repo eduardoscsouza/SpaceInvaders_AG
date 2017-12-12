@@ -555,15 +555,14 @@ void get_input()
     */
     network_input[0] = ship_x;
     bool found = false;
-    for (int i=0; i<ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS && !found; i++){
+    for (int i=(ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS)-1; i>=0 && !found; i--){
         if(fleet[i].alive){
             network_input[1] = fleet[i].x_pos;
-            network_input[2] = fleet[i].y_pos;
             found = true;
         }
     }
-    network_input[3] = alien_missile_x;
-    network_input[4] = alien_missile_y;
+    network_input[2] = alien_missile_x;
+    network_input[3] = alien_missile_y;
 }
 
 void network_keypress(unsigned long long value)
