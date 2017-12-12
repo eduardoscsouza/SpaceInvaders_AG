@@ -166,7 +166,7 @@ Network * copy_network(Network * cur_network)
 			memcpy(
 				network->layers[i]->neurons[j]->weights,
 				cur_network->layers[i]->neurons[j]->weights,
-				cur_network->layers[i]->neurons[j]->n_dim*sizeof(nn_float_t)
+				(cur_network->layers[i]->neurons[j]->n_dim+1)*sizeof(nn_float_t)
 			);
 		}
 	}
