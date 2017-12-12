@@ -5,6 +5,7 @@
 
 #include "neuralnetwork.h"
 #include <GL/glut.h>
+#include <utility>
 
 #define SHIP_SCALE 0.20f
 #define SHIP_Y_OFFSET -0.9f
@@ -31,17 +32,18 @@
 
 #define NEURAL_NETWORK_DELAY 10000
 #define NEURAL_NETWORK_KEY_DELAY 2000
-#define NEURAL_NETWORK_N_LAYERS 3
+#define NEURAL_NETWORK_N_LAYERS 2
 #define NEURAL_NETWORK_INPUT_SIZE (3*ALIEN_FLEET_ROWS*ALIEN_FLEET_COLUMNS + 7)
-#define NEURAL_NETWORK_LAYERS_SIZES {100, 100, 4}
-#define NEURAL_NETWORK_LAYERS_ACTVS {&sigm, &sigm, &sigm}
+#define NEURAL_NETWORK_LAYERS_SIZES {20, 4}
+#define NEURAL_NETWORK_LAYERS_ACTVS {&sigm, &sigm}
 
 #define POP_SIZE 10
-#define GEN 3
+#define GEN 20
+#define N_ITER 10
 #define ALIEN_KILLS 1
 #define RAFFLE_SIZE 1000000
 #define CHANCE_MUT 0.3
-#define TX_MUT 0.5
+#define TX_MUT 1.0
 
 #define EVENT_HANDLER_DELAY 20
 
@@ -83,10 +85,10 @@ void event_handler();
 void init();
 float fitness();
 bool raffle (float);
-bool comp (int, int);
+//bool comp (pair<float, Network*>, pair<float, Network*>);
 void reproduction();
-void cross_network (Neuron *, Neuron *, Neuron *, float);
-void cross_network (Layer *, Layer *, Layer *, float);
-Network * cross_network (Network *, Network *, float);
+void cross_network (Neuron *, Neuron *, Neuron *);
+void cross_network (Layer *, Layer *, Layer *);
+Network * cross_network (Network *, Network *);
 
 #endif

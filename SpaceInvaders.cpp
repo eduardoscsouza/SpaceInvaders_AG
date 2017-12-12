@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <algorithm>
 
+
 #define EUCL_DIST(x1, y1, x2, y2) (sqrt(((x1)-(x2)) * ((x1)-(x2)) + ((y1)-(y2)) * ((y1)-(y2))))
 
 using namespace std;
@@ -48,11 +49,11 @@ char alien_missile_state;
 int ship_lives, alien_lives;
 
 unsigned long long current_game = 0;
-double time_multiplier = 0.1;
+double time_multiplier = 0.001;
 bool clean_events = false;
 priority_queue<Event, vector<Event>, greater<Event> > events;
 
-int i_pop = 0, i_gen = 0, id[POP_SIZE];
+int i_pop = 0, i_gen = 0, i_iter = 0;
 Network * cur_network = NULL, * best = NULL, * pop[POP_SIZE];
 float fit_best, fit[POP_SIZE];
 nn_float_t network_input[NEURAL_NETWORK_INPUT_SIZE];
@@ -65,27 +66,36 @@ void end_game()
 	current_game++;
 	clean_events = true;
 
-	if (i_gen < GEN)	fit[i_pop] = fitness();
-	if (fit[i_pop] > fit_best) {
-		fit_best = fit[i_pop];
+	if (i_gen < GEN)	fit[i_pop] += fitness();
+	if (fit[i_pop]/(float)N_ITER > fit_best) {
+		fit_best = fit[i_pop]/(float)N_ITER;
 		best = copy_network(pop[i_pop]);
 	}
-	printf ("Gen: %d  Pop: %d  Fit: %.3f  Best %.3f\n", i_gen, i_pop, fit[i_pop], fit_best);
+	printf ("Gen: %d  Pop: %d  Fit: %.3f  Best %.3f\n", i_gen, i_pop, fitness(), fit_best);
 
-	i_pop++;
-	if (i_pop >= POP_SIZE) {
-		reproduction();
-		i_pop = 0;
-		i_gen++;
+	i_iter++;
+	if (i_iter >= N_ITER) {
+		i_iter = 0;
+		i_pop++;
+		if (i_pop >= POP_SIZE) {
+			reproduction();
+			i_pop = 0;
+			i_gen++;
+			if (i_gen < GEN)	for (int i = 0; i < POP_SIZE; i++)	fit[i] = 0.0;
+		}
 	}
 	
 	if (i_gen < GEN)	cur_network = pop[i_pop];
 	else {
+		vector <pair <float, Network *> > old_gen;
 		for (int i = 0; i < POP_SIZE; i++)
-			printf ("%.3f  ", fit[id[i]]);
-		printf ("   %d\n", id[POP_SIZE - 1]);
-		cur_network = pop[id[POP_SIZE - 1]];
-//		time_multiplier = 0.5;
+			old_gen.push_back(make_pair(fit[i], pop[i]));
+		sort (old_gen.begin(), old_gen.end());
+		for (int i = 0; i < POP_SIZE; i++) {
+			printf ("%f\n", old_gen[i].first/(float)N_ITER);
+			cur_network = old_gen[i].second;
+		}
+		time_multiplier = 0.5;
 //		cur_network = best;
 //		if (!i_pop)	glutTimerFunc(0, &redraw, 0);
 	}
@@ -96,7 +106,7 @@ void init ()
 {
 	for (int i = 0; i < POP_SIZE; i++) {
 		pop[i] = build_network();
-		id[i] = i;
+		fit[i] = 0;
 	}
 	cur_network = pop[0];
 	best = pop[0];
@@ -117,62 +127,57 @@ bool raffle (float prob)
 	return (rand()%RAFFLE_SIZE) < ceil (prob * RAFFLE_SIZE);
 }
 
-bool comp (int a, int b)
-{
-	return fit[a] < fit[b];
-}
-
-void cross_neuron (Neuron * child, Neuron * mother, Neuron * father, float mut)
+void cross_neuron (Neuron * child, Neuron * mother, Neuron * father)
 {
 	for (int i = 0; i < child->n_dim + 1; i++) {
 		child->weights[i] = (mother->weights[i] + father->weights[i]) / 2.0;
-		child->weights[i] *= mut;
+		if (raffle (CHANCE_MUT)) {
+			if (rand()%2)	child->weights[i] += TX_MUT;
+			else			child->weights[i] -= TX_MUT;
+		}
 	}
 }
 
-void cross_layer (Layer * child, Layer * mother, Layer * father, float mut)
+void cross_layer (Layer * child, Layer * mother, Layer * father)
 {
 	for (int i = 0; i < child->n_neurons; i++)
-		cross_neuron (child->neurons[i], mother->neurons[i], father->neurons[i], mut);
+		cross_neuron (child->neurons[i], mother->neurons[i], father->neurons[i]);
 }
 
-Network * cross_network (Network * mother, Network * father, float mut)
+Network * cross_network (Network * mother, Network * father)
 {
 	Network * child = build_network();
 
 	for (int i = 1; i < child->n_layers; i++) 
-		cross_layer (child->layers[i], mother->layers[i], father->layers[i], mut);
+		cross_layer (child->layers[i], mother->layers[i], father->layers[i]);
 
 	return child;
 }
 
 void reproduction ()
 {
-	vector <Network *> next_gen;
-	sort (id, id + POP_SIZE, comp);
-	if (i_gen >= GEN)
+	if (i_gen >= GEN) 
 		return;
 
-	for (int i = 0; i < POP_SIZE; i++) {
-		float chance = (float)(i + 1) / (float)POP_SIZE;
-		if (raffle(chance)) 
-			next_gen.push_back(pop[id[i]]);
-	}
-
-	int ngen = next_gen.size();
-
-	while ((int)next_gen.size() < POP_SIZE) {
-		Network * mother = next_gen[rand()%ngen];
-		Network * father = next_gen[rand()%ngen];
-		float mut = 1.0;
-		if (raffle(CHANCE_MUT)) {
-			if (rand()%2)	mut += TX_MUT;
-			else			mut -= TX_MUT;
-		}
-		next_gen.push_back(cross_network(mother, father, mut));
-	}
-
+	vector <Network *> parents;
+	vector <pair <float, Network *> > old_gen;
 	for (int i = 0; i < POP_SIZE; i++)
+		old_gen.push_back(make_pair(fit[i], pop[i]));
+	sort (old_gen.begin(), old_gen.end());
+
+	for (int i = POP_SIZE/2; i < POP_SIZE; i++) 
+		parents.push_back(old_gen[i].second);
+
+	vector <Network *> next_gen;
+
+	next_gen.push_back(parents[parents.size() - 1]);
+	while ((int)next_gen.size() < POP_SIZE) {
+		Network * mother = parents[rand()%parents.size()];
+		Network * father = parents[rand()%parents.size()];
+		next_gen.push_back(cross_network(mother, father));
+	}
+
+	for (int i = 0; i < POP_SIZE; i++) 
 		pop[i] = next_gen[i];
 }
 
@@ -536,19 +541,29 @@ Network * build_network()
 
 void get_input()
 {
-	int n_aliens = ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS;
-	for (int i=0; i<n_aliens; i++){
-		network_input[i*3] = fleet[i].x_pos;
-		network_input[i*3 + 1] = fleet[i].y_pos;
-		network_input[i*3 + 2] = fleet[i].alive;
-	}
-	network_input[3*n_aliens] = ship_x;
-	network_input[3*n_aliens + 1] = fleet_direction;
-	network_input[3*n_aliens + 2] = alien_missile_x;
-	network_input[3*n_aliens + 3] = alien_missile_y;
-	network_input[3*n_aliens + 4] = alien_missile_state;
-	network_input[3*n_aliens + 5] = ship_lives;
-	network_input[3*n_aliens + 6] = alien_lives;
+    /*
+    GLfloat ship_x;
+    char ship_dir;
+    AlienShip fleet[ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS];
+    int fleet_direction;
+    GLfloat missile_x, missile_y;
+    bool missile_firing;
+    bool game_over;
+    GLfloat alien_missile_x, alien_missile_y;
+    char alien_missile_state;
+    int ship_lives, alien_lives;
+    */
+    network_input[0] = ship_x;
+    bool found = false;
+    for (int i=0; i<ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS && !found; i++){
+        if(fleet[i].alive){
+            network_input[1] = fleet[i].x_pos;
+            network_input[2] = fleet[i].y_pos;
+            found = true;
+        }
+    }
+    network_input[3] = alien_missile_x;
+    network_input[4] = alien_missile_y;
 }
 
 void network_keypress(unsigned long long value)
