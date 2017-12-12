@@ -48,7 +48,7 @@ char alien_missile_state;
 int ship_lives, alien_lives;
 
 unsigned long long current_game = 0;
-double time_multiplier = 0.001;
+double time_multiplier = 0.1;
 bool clean_events = false;
 priority_queue<Event, vector<Event>, greater<Event> > events;
 
@@ -587,7 +587,7 @@ void network_action(unsigned long long value)
 	}
 	if (max_id == 0) key = 'l';
 	else if (max_id == 1) key = 'r';
-	else key = 'n';
+	//else key = 'n';
 	add_event(NEURAL_NETWORK_KEY_DELAY, &network_keypress, key);
 	add_event(2*NEURAL_NETWORK_KEY_DELAY, &network_keypress, -key);
 
