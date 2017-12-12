@@ -39,6 +39,8 @@
 #define GEN 10
 #define ALIEN_KILLS 1
 #define RAFFLE_SIZE 1000000
+#define CHANCE_MUT 0.3
+#define TX_MUT 0.1
 
 #define EVENT_HANDLER_DELAY 20
 
@@ -82,8 +84,8 @@ float fitness();
 bool raffle (float);
 bool comp (int, int);
 void reproduction();
-void cross_network (Neuron *, Neuron *, Neuron *);
-void cross_network (Layer *, Layer *, Layer *);
-Network * cross_network (Network *, Network *);
+void cross_network (Neuron *, Neuron *, Neuron *, float);
+void cross_network (Layer *, Layer *, Layer *, float);
+Network * cross_network (Network *, Network *, float);
 
 #endif

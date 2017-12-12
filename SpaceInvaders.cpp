@@ -77,14 +77,14 @@ void end_game()
 		reproduction();
 		i_pop = 0;
 		i_gen++;
-		if (i_gen >= GEN) {
-			time_multiplier = 0.5;
-			glutTimerFunc(0, &redraw, 0);
-		}
 	}
 	
 	if (i_gen < GEN)	cur_network = pop[i_pop];
-	else 				cur_network = best;
+	else {
+		time_multiplier = 0.5;
+		cur_network = best;
+		glutTimerFunc(0, &redraw, 0);
+	}
 	glutTimerFunc(0, &reset, 0);
 }
 
@@ -118,24 +118,26 @@ bool comp (int a, int b)
 	return fit[a] < fit[b];
 }
 
-void cross_neuron (Neuron * child, Neuron * mother, Neuron * father)
+void cross_neuron (Neuron * child, Neuron * mother, Neuron * father, float mut)
 {
-	for (int i = 0; i < child->n_dim + 1; i++)
+	for (int i = 0; i < child->n_dim + 1; i++) {
 		child->weights[i] = (mother->weights[i] + father->weights[i]) / 2.0;
+		child->weights[i] += mut;
+	}
 }
 
-void cross_layer (Layer * child, Layer * mother, Layer * father)
+void cross_layer (Layer * child, Layer * mother, Layer * father, float mut)
 {
 	for (int i = 0; i < child->n_neurons; i++)
-		cross_neuron (child->neurons[i], mother->neurons[i], father->neurons[i]);
+		cross_neuron (child->neurons[i], mother->neurons[i], father->neurons[i], mut);
 }
 
-Network * cross_network (Network * mother, Network * father)
+Network * cross_network (Network * mother, Network * father, float mut)
 {
 	Network * child = build_network();
 
 	for (int i = 1; i < child->n_layers; i++) 
-		cross_layer (child->layers[i], mother->layers[i], father->layers[i]);
+		cross_layer (child->layers[i], mother->layers[i], father->layers[i], mut);
 
 	return child;
 }
@@ -156,7 +158,12 @@ void reproduction ()
 	while ((int)next_gen.size() < POP_SIZE) {
 		Network * mother = next_gen[rand()%ngen];
 		Network * father = next_gen[rand()%ngen];
-		next_gen.push_back(cross_network(mother, father));
+		float mut = 0.0;
+		if (raffle(CHANCE_MUT)) {
+			if (rand()%2)	mut += TX_MUT;
+			else			mut -= TX_MUT;
+		}
+		next_gen.push_back(cross_network(mother, father, mut));
 	}
 
 	for (int i = 0; i < POP_SIZE; i++)
