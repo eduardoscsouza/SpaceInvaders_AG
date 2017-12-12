@@ -150,7 +150,8 @@ void reproduction ()
 {
 	vector <Network *> next_gen;
 	sort (id, id + POP_SIZE, comp);
-	return;
+	if (i_gen >= GEN)
+		return;
 
 	for (int i = 0; i < POP_SIZE; i++) {
 		float chance = (float)(i + 1) / (float)POP_SIZE;
