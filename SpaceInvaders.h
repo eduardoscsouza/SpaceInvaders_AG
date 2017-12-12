@@ -17,6 +17,7 @@
 
 #define ALIEN_MISSILE_WAIT_TIME 1000000.0
 
+#define SHIP_LIVES 3
 #define ALIEN_FLEET_ROWS 6
 #define ALIEN_FLEET_COLUMNS 8
 #define ALIEN_BOX_X 0.15f
@@ -36,11 +37,11 @@
 #define NEURAL_NETWORK_LAYERS_ACTVS {&sigm, &sigm, &sigm}
 
 #define POP_SIZE 10
-#define GEN 1
+#define GEN 3
 #define ALIEN_KILLS 1
 #define RAFFLE_SIZE 1000000
 #define CHANCE_MUT 0.3
-#define TX_MUT 0.1
+#define TX_MUT 0.5
 
 #define EVENT_HANDLER_DELAY 20
 

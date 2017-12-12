@@ -48,7 +48,7 @@ char alien_missile_state;
 int ship_lives, alien_lives;
 
 unsigned long long current_game = 0;
-double time_multiplier = 0.001;
+double time_multiplier = 0.1;
 bool clean_events = false;
 priority_queue<Event, vector<Event>, greater<Event> > events;
 
@@ -65,7 +65,7 @@ void end_game()
 	current_game++;
 	clean_events = true;
 
-	fit[i_pop] = fitness();
+	if (i_gen < GEN)	fit[i_pop] = fitness();
 	if (fit[i_pop] > fit_best) {
 		fit_best = fit[i_pop];
 		best = copy_network(pop[i_pop]);
@@ -81,10 +81,13 @@ void end_game()
 	
 	if (i_gen < GEN)	cur_network = pop[i_pop];
 	else {
-		printf ("Best active\n");
-		time_multiplier = 0.5;
-		cur_network = best;
-		if (!i_pop)	glutTimerFunc(0, &redraw, 0);
+		for (int i = 0; i < POP_SIZE; i++)
+			printf ("%.3f  ", fit[id[i]]);
+		printf ("   %d\n", id[POP_SIZE - 1]);
+		cur_network = pop[id[POP_SIZE - 1]];
+//		time_multiplier = 0.5;
+//		cur_network = best;
+//		if (!i_pop)	glutTimerFunc(0, &redraw, 0);
 	}
 	glutTimerFunc(0, &reset, 0);
 }
@@ -147,6 +150,7 @@ void reproduction ()
 {
 	vector <Network *> next_gen;
 	sort (id, id + POP_SIZE, comp);
+	return;
 
 	for (int i = 0; i < POP_SIZE; i++) {
 		float chance = (float)(i + 1) / (float)POP_SIZE;
@@ -610,7 +614,7 @@ void reset(int value)
 	alien_missile_state = missile_firing = 0;
 	alien_missile_x = alien_missile_y = missile_x = missile_y = -1.0f;
 	game_over = false;
-	ship_lives = 3;
+	ship_lives = SHIP_LIVES;
 	alien_lives = ALIEN_FLEET_COLUMNS * ALIEN_FLEET_ROWS;
 
 //	if (cur_network != NULL) delete_network(cur_network);
@@ -687,7 +691,7 @@ int main(int argc, char * argv[])
 	reset(0);
 
 	//Incializar o desenho
-//	glutTimerFunc(0, &redraw, 0);
+	glutTimerFunc(0, &redraw, 0);
 	glutMainLoop();
 	return 0;
 }
