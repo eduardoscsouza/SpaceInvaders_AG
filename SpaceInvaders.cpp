@@ -165,12 +165,15 @@ void reproduction ()
 		old_gen.push_back(make_pair(fit[i], pop[i]));
 	sort (old_gen.begin(), old_gen.end());
 
-	for (int i = POP_SIZE/2; i < POP_SIZE; i++) 
-		parents.push_back(old_gen[i].second);
+	for (int i = 0; i < POP_SIZE; i++) {
+		float chance = (float)(i+1) / (float)POP_SIZE;
+		if (raffle(chance))
+			parents.push_back(old_gen[i].second);
+	}
 
 	vector <Network *> next_gen;
-
 	next_gen.push_back(parents[parents.size() - 1]);
+
 	while ((int)next_gen.size() < POP_SIZE) {
 		Network * mother = parents[rand()%parents.size()];
 		Network * father = parents[rand()%parents.size()];
@@ -561,8 +564,8 @@ void get_input()
             found = true;
         }
     }
-    network_input[2] = alien_missile_x;
-    network_input[3] = alien_missile_y;
+//    network_input[2] = alien_missile_x;
+//    network_input[3] = alien_missile_y;
 }
 
 void network_keypress(unsigned long long value)
@@ -671,7 +674,7 @@ void event_handler()
 	else{
 		if (!events.empty()){
 			double curtime = get_curtime();
-			while (curtime >= events.top().event.first){
+			if (curtime >= events.top().event.first){
 				events.top().event.second.first(events.top().event.second.second);
 				events.pop();
 			}
