@@ -608,7 +608,7 @@ void post_end_game_operations()
 				global_best = copy_network(population[population_fitness.top().second]);
 				global_best_fit = population_fitness.top().first;
 			}
-			printf("Generation Best: %lf --- Global Best: %lf\n", population_fitness.top().first, global_best_fit);
+			printf("Generation %d Best: %lf --- Global Best: %lf\n", cur_gen, population_fitness.top().first, global_best_fit);
 			get_next_generation();
 			
 			while(!population_fitness.empty()) population_fitness.pop();
