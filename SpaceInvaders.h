@@ -29,7 +29,7 @@
 #define ALIEN_MISSILE_WAIT_TIME 1000000.0
 
 #define TIME_MULTIPLIER 0.001
-#define DISPLAY_ON true
+#define DISPLAY_ON false
 #define FPS 30
 
 #define NEURAL_NETWORK_DELAY 100000.0
@@ -40,11 +40,11 @@
 #define NEURAL_NETWORK_LAYERS_ACTVS {&sigm, &sigm}
 
 #define PRECISION 1000000
-#define PROB_COEF 10
-#define MUTATION_PROB 0.3
-#define MUTATION_VAL 1.0
+#define PROB_COEF 2
+#define MUTATION_PROB 0.4
+#define MUTATION_VAL 3.0
 
-#define N_TESTS 10
+#define N_TESTS 5
 #define POPULATION_SIZE 10
 #define N_GENERATIONS 10
 
