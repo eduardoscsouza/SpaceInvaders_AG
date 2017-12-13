@@ -28,6 +28,8 @@
 #define ALIEN_FLEET_DELAY 300000.0
 #define ALIEN_MISSILE_WAIT_TIME 1000000.0
 
+#define TIME_MULTIPLIER 0.001
+#define DISPLAY_ON true
 #define FPS 30
 
 #define NEURAL_NETWORK_DELAY 100000.0
@@ -37,7 +39,14 @@
 #define NEURAL_NETWORK_LAYERS_SIZES {20, 4}
 #define NEURAL_NETWORK_LAYERS_ACTVS {&sigm, &sigm}
 
-#define POPULATION_SIZE 100
+#define PRECISION 1000000
+#define PROB_COEF 10
+#define MUTATION_PROB 0.3
+#define MUTATION_VAL 1.0
+
+#define N_TESTS 10
+#define POPULATION_SIZE 10
+#define N_GENERATIONS 10
 
 void draw_ship();
 void draw_alien(GLfloat, GLfloat, int);
@@ -65,6 +74,9 @@ void network_keypress(unsigned long long);
 void network_action(unsigned long long);
 
 double get_fitness();
+double normalized_random_generator(unsigned long long);
+double probability_function(double);
+void get_next_generation();
 
 void end_game();
 void wait_events_end(int);

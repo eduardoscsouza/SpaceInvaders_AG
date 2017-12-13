@@ -56,7 +56,12 @@ priority_queue<Event, vector<Event>, greater<Event> > events;
 Network * cur_network;
 nn_float_t network_input[NEURAL_NETWORK_INPUT_SIZE];
 
+int cur_gen, cur_ind, cur_test;
+double cur_fit;
+priority_queue<pair<double, int> > population_fitness;
 vector<Network *> population(POPULATION_SIZE);
+Network * global_best;
+double global_best_fit;
 
 
 
@@ -511,6 +516,65 @@ double get_fitness()
 	return (ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS) - alien_lives;
 }
 
+double normalized_random_generator(unsigned long long precision)
+{
+	return (rand() % (precision+1)) / (double)precision;
+}
+
+double probability_function(double x, double coef)
+{
+	return log(coef*x + 1)/log(coef + 1);
+}
+
+Network * make_child(Network * mother, Network * father)
+{
+	Network * child = build_network();
+
+	for(int i=0; i<mother->n_layers; i++){
+		for (int j=0; j<mother->layers[i]->n_neurons; j++){
+			for (int k=0; k<mother->layers[i]->neurons[j]->n_dim+1; k++){
+				child->layers[i]->neurons[j]->weights[k] =
+				mother->layers[i]->neurons[j]->weights[k] +
+				father->layers[i]->neurons[j]->weights[k] / 2.0;
+
+				if (normalized_random_generator(PRECISION) <= MUTATION_PROB)
+					child->layers[i]->neurons[j]->weights[k] += MUTATION_VAL;
+			}
+		}
+	}
+
+	return child;
+}
+
+void get_next_generation()
+{
+	if (population_fitness.top().first >= global_best_fit){
+		global_best = copy_network(population[population_fitness.top().second]);
+		global_best_fit = population_fitness.top().first;
+	}
+
+	double cur_rank = POPULATION_SIZE-1;
+	vector<Network *> next_gen(POPULATION_SIZE);
+	while(!population_fitness.empty()){
+		if (normalized_random_generator(PRECISION) <= probability_function(cur_rank/(POPULATION_SIZE-1), PROB_COEF))
+			next_gen.push_back(population[population_fitness.top().second]);
+		else delete_network(population[population_fitness.top().second]);
+		
+		population_fitness.pop();
+		cur_rank--;
+	}
+
+	int parents_count = next_gen.size();
+	while(next_gen.size() < POPULATION_SIZE){
+		Network * mother = population[rand()%parents_count];
+		Network * father = population[rand()%parents_count];
+		while(mother == father) father = population[rand()%parents_count];
+		next_gen.push_back(make_child(mother, father));
+	}
+
+	population.swap(next_gen);
+}
+
 
 
 void end_game()
@@ -533,13 +597,26 @@ void wait_events_end(int value)
 
 void post_end_game_operations()
 {
-	printf("End of game %llu  %lf\n", current_game-1, get_fitness());
-	if (current_game+1 == 5){
-		time_multiplier = 0.1;
-		turn_display(true);
+	//printf("End of game %llu; %d %d %d %p %lf\n", current_game-1, cur_gen, cur_ind, cur_test, cur_network, get_fitness());
+
+	cur_test++;
+	cur_fit += get_fitness();
+	if (cur_test == N_TESTS){
+		population_fitness.push(pair<double, int>(cur_fit/N_TESTS, cur_ind));
+		cur_fit = cur_test = 0;
+		cur_ind++;
 	}
-	else if (current_game+1 > 5) exit(0);
-	
+	if (cur_ind == POPULATION_SIZE){
+		//get_next_generation();
+		while(!population_fitness.empty()) population_fitness.pop();
+		cur_ind = 0;
+		cur_gen++;
+	}
+	if (cur_gen == N_GENERATIONS){
+		exit(0);
+	}
+
+	cur_network = population[cur_ind];
 	reset();
 }
 
@@ -602,11 +679,16 @@ void init()
 {
 	srand(time(NULL));
 	for (int i=0; i<POPULATION_SIZE; i++) population[i] = build_network();
-	turn_display(true);
+	turn_display(DISPLAY_ON);
 	current_game = 0;
-	time_multiplier = 0.001;
+	time_multiplier = TIME_MULTIPLIER;
 	clean_events = false;
+	cur_gen = cur_ind = cur_test = 0;
+	cur_fit = 0.0;
+	while(!population_fitness.empty()) population_fitness.pop();
 	cur_network = population[0];
+	global_best = NULL;
+	global_best_fit = FLT_MIN;
 }
 
 
