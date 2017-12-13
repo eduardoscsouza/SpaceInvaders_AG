@@ -47,7 +47,7 @@ char alien_missile_state;
 int ship_lives, alien_lives;
 
 unsigned long long current_game = 0;
-double time_multiplier = 0.0001;
+double time_multiplier = 0.001;
 bool clean_events = false;
 priority_queue<Event, vector<Event>, greater<Event> > events;
 
@@ -319,7 +319,7 @@ void keyboard_down_call(unsigned char key, int x, int y)
 			missile_y = SHIP_Y_OFFSET + (SHIP_SCALE * 0.5f) + (MISSILE_SCALE * 0.3f);
 		}
 	}
-	else if (key == 'r') reset(0);
+	else if (key == 'r') reset();
 }
 
 
@@ -481,10 +481,10 @@ void network_action(unsigned long long value)
 	if (max_id == 0) key = 'l';
 	else if (max_id == 1) key = 'r';
 	else key = 'n';
-	add_event(NEURAL_NETWORK_KEY_DELAY*0.1, &network_keypress, key);
-	add_event(NEURAL_NETWORK_KEY_DELAY*1.1, &network_keypress, -key);
+	add_event(0, &network_keypress, key);
+	add_event(NEURAL_NETWORK_KEY_DELAY, &network_keypress, -key);
 
-	if (output[output_size-1] >= 0.5f) add_event(NEURAL_NETWORK_KEY_DELAY*0.1, &network_keypress, ' ');
+	if (output[output_size-1] >= 0.5f) add_event(0, &network_keypress, ' ');
 
 	free(output);
 	if (!game_over) add_event(NEURAL_NETWORK_DELAY, &network_action, value);
@@ -498,7 +498,20 @@ void end_game()
 	game_over = true;
 	current_game++;
 	clean_events = true;
+	glutTimerFunc(0, &wait_events_end, 0);
+}
 
+void wait_events_end(int value)
+{
+	if (clean_events){
+		glutTimerFunc(0, &wait_events_end, 0);
+		return;
+	}
+	post_end_game_operations();
+}
+
+void post_end_game_operations()
+{
 	printf("End of game %llu\n", current_game);
 	if (current_game == MAX_GAMES-2){
 		time_multiplier = 0.5;
@@ -506,16 +519,11 @@ void end_game()
 	}
 	else if (current_game > MAX_GAMES-2) exit(0);
 	
-	glutTimerFunc(0, &reset, 0);
+	reset();
 }
 
-void reset(int value)
+void reset()
 {
-	if (clean_events){
-		glutTimerFunc(0, &reset, 0);
-		return;
-	}
-
 	ship_x = 0.0f;
 	ship_dir = 0;
 	fleet_direction = ALIEN_FLEET_INIT_MOV;
@@ -591,7 +599,7 @@ int main(int argc, char * argv[])
 	glutSpecialUpFunc(&special_up_call);
 	glutDisplayFunc(&draw_all);
 	glutIdleFunc(&event_handler);
-	reset(0);
+	reset();
 
 	//Incializar o desenho
 	//glutTimerFunc(0, &redraw, 0);

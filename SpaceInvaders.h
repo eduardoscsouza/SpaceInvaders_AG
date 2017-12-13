@@ -28,14 +28,14 @@
 #define ALIEN_FLEET_DELAY 300000.0
 #define ALIEN_MISSILE_WAIT_TIME 1000000.0
 
-#define NEURAL_NETWORK_DELAY 50000
-#define NEURAL_NETWORK_KEY_DELAY 2000
+#define NEURAL_NETWORK_DELAY 1000.0
+#define NEURAL_NETWORK_KEY_DELAY 200.0
 #define NEURAL_NETWORK_N_LAYERS 2
 #define NEURAL_NETWORK_INPUT_SIZE 2
 #define NEURAL_NETWORK_LAYERS_SIZES {20, 4}
 #define NEURAL_NETWORK_LAYERS_ACTVS {&sigm, &sigm}
 
-#define MAX_GAMES 1000
+#define MAX_GAMES 100
 
 #define FPS 30
 
@@ -64,7 +64,9 @@ void network_keypress(unsigned long long);
 void network_action(unsigned long long);
 
 void end_game();
-void reset(int);
+void wait_events_end(int);
+void post_end_game_operations();
+void reset();
 
 double get_curtime();
 void add_event(double, void (*)(unsigned long long), unsigned long long);
