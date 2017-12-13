@@ -54,12 +54,14 @@ bool clean_events;
 priority_queue<Event, vector<Event>, greater<Event> > events;
 
 Network * cur_network;
+int aim;
 nn_float_t network_input[NEURAL_NETWORK_INPUT_SIZE];
 
 int cur_gen, cur_ind, cur_test;
 double cur_fit;
 priority_queue<pair<double, int> > population_fitness;
 vector<Network *> population(POPULATION_SIZE);
+
 Network * global_best;
 double global_best_fit;
 
@@ -447,13 +449,8 @@ void get_input()
     int ship_lives, alien_lives;
     */
     network_input[0] = ship_x;
-    bool found = false;
-    for (int i=(ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS)-1; i>=0 && !found; i--){
-        if(fleet[i].alive){
-            network_input[1] = fleet[i].x_pos;
-            found = true;
-        }
-    }
+    while (alien_lives>0 && !fleet[aim].alive) aim = rand() % (ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS);
+	network_input[1] = fleet[aim].x_pos;
     //network_input[2] = alien_missile_x;
     //network_input[3] = alien_missile_y;
 }
@@ -703,6 +700,7 @@ void init()
 	cur_fit = 0.0;
 	while(!population_fitness.empty()) population_fitness.pop();
 	cur_network = population[0];
+	aim = rand() % (ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS);
 	global_best = NULL;
 	global_best_fit = FLT_MIN;
 }
