@@ -450,10 +450,15 @@ void get_input()
     int ship_lives, alien_lives;
     */
     network_input[0] = ship_x;
-    while (alien_lives>0 && !fleet[cur_aim].alive) cur_aim = rand() % (ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS);
-	network_input[1] = fleet[cur_aim].x_pos;
+    bool found = false;
+    for (int i=(ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS)-1; i>=0 && !found; i--){
+        if(fleet[i].alive){
+            network_input[1] = fleet[i].x_pos;
+            found = true;
+        }
+    }
     //network_input[2] = alien_missile_x;
-    //network_input[3] = alien_missile_y;
+	//network_input[3] = alien_missile_y;
 }
 
 void network_keypress(unsigned long long value)
