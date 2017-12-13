@@ -45,6 +45,7 @@ void draw_fleet();
 void draw_missile();
 void draw_all();
 void redraw(int);
+void turn_display(bool);
 
 void detect_colision();
 

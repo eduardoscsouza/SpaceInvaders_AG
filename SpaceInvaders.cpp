@@ -46,6 +46,8 @@ GLfloat alien_missile_x, alien_missile_y;
 char alien_missile_state;
 int ship_lives, alien_lives;
 
+bool display_on = false;
+
 unsigned long long current_game = 0;
 double time_multiplier = 0.001;
 bool clean_events = false;
@@ -243,7 +245,16 @@ com uma taxa de 60FPS
 void redraw(int value)
 {
 	glutPostRedisplay();
-	glutTimerFunc(1000/FPS, &redraw, 0);
+	if (display_on) glutTimerFunc(1000/FPS, &redraw, 0);
+}
+
+void turn_display(bool state)
+{
+	if (display_on && !state) display_on = state;
+	else if (!display_on && state){
+		display_on = state;
+		glutTimerFunc(0, &redraw, 0);
+	}
 }
 
 
@@ -515,7 +526,7 @@ void post_end_game_operations()
 	printf("End of game %llu\n", current_game);
 	if (current_game == MAX_GAMES-2){
 		time_multiplier = 0.5;
-		glutTimerFunc(0, &redraw, 0);
+		turn_display(true);
 	}
 	else if (current_game > MAX_GAMES-2) exit(0);
 	
@@ -602,7 +613,6 @@ int main(int argc, char * argv[])
 	reset();
 
 	//Incializar o desenho
-	//glutTimerFunc(0, &redraw, 0);
 	glutMainLoop();
 	return 0;
 }
