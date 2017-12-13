@@ -28,7 +28,7 @@
 #define ALIEN_FLEET_DELAY 300000.0
 #define ALIEN_MISSILE_WAIT_TIME 1000000.0
 
-#define TIME_MULTIPLIER 0.0001
+#define TIME_MULTIPLIER 0.001
 #define DISPLAY_ON false
 #define FPS 30
 
@@ -44,9 +44,9 @@
 #define MUTATION_PROB 0.4
 #define MUTATION_VAL 0.5
 
-#define N_TESTS 5
-#define POPULATION_SIZE 1000
-#define N_GENERATIONS 20
+#define N_TESTS 3
+#define POPULATION_SIZE 100
+#define N_GENERATIONS 10
 
 void draw_ship();
 void draw_alien(GLfloat, GLfloat, int);
