@@ -46,15 +46,18 @@ GLfloat alien_missile_x, alien_missile_y;
 char alien_missile_state;
 int ship_lives, alien_lives;
 
-bool display_on = false;
+bool display_on;
 
-unsigned long long current_game = 0;
-double time_multiplier = 0.001;
-bool clean_events = false;
+unsigned long long current_game;
+double time_multiplier;
+bool clean_events;
 priority_queue<Event, vector<Event>, greater<Event> > events;
 
-Network * cur_network = NULL;
+Network * cur_network;
 nn_float_t network_input[NEURAL_NETWORK_INPUT_SIZE];
+
+vector<Network *> population(POPULATION_SIZE);
+
 
 
 /*
@@ -503,6 +506,13 @@ void network_action(unsigned long long value)
 
 
 
+double get_fitness()
+{
+	return (ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS) - alien_lives;
+}
+
+
+
 void end_game()
 {
 	if (game_over) return;
@@ -523,12 +533,12 @@ void wait_events_end(int value)
 
 void post_end_game_operations()
 {
-	printf("End of game %llu\n", current_game);
-	if (current_game == MAX_GAMES-2){
-		time_multiplier = 0.5;
+	printf("End of game %llu  %lf\n", current_game-1, get_fitness());
+	if (current_game+1 == 5){
+		time_multiplier = 0.1;
 		turn_display(true);
 	}
-	else if (current_game > MAX_GAMES-2) exit(0);
+	else if (current_game+1 > 5) exit(0);
 	
 	reset();
 }
@@ -543,8 +553,6 @@ void reset()
 	game_over = false;
 	ship_lives = SHIP_INIT_LIVES;
 	alien_lives = ALIEN_FLEET_COLUMNS * ALIEN_FLEET_ROWS;
-	if (cur_network != NULL) delete_network(cur_network);
-	cur_network = build_network();
 	for (int i = 0; i<ALIEN_FLEET_ROWS * ALIEN_FLEET_COLUMNS; i++){
 		fleet[i].alive = true;
 		fleet[i].x_pos = ALIEN_FLEET_START_POS_X + ((i % ALIEN_FLEET_COLUMNS) * (ALIEN_BOX_X + ALIEN_SPACING));
@@ -590,6 +598,19 @@ void event_handler()
 
 
 
+void init()
+{
+	srand(time(NULL));
+	for (int i=0; i<POPULATION_SIZE; i++) population[i] = build_network();
+	turn_display(true);
+	current_game = 0;
+	time_multiplier = 0.001;
+	clean_events = false;
+	cur_network = population[0];
+}
+
+
+
 int main(int argc, char * argv[])
 {
 	//Inicializacao do glut
@@ -610,6 +631,7 @@ int main(int argc, char * argv[])
 	glutSpecialUpFunc(&special_up_call);
 	glutDisplayFunc(&draw_all);
 	glutIdleFunc(&event_handler);
+	init();
 	reset();
 
 	//Incializar o desenho
